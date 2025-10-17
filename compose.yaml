@@ -1,0 +1,55 @@
+﻿services:
+  api:
+    image: personalapplicationproject
+    container_name: personalapplicationproject
+    build:
+      context: .
+      dockerfile: PersonalApplicationProject/Dockerfile
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - Database__Host=db
+      - Database__Port=5432
+      - Database__Name=personalappdb
+    depends_on:
+      - db
+    networks:
+      - app-network
+    secrets:
+      - db_user
+      - db_password
+      
+  db:
+    image: postgres:latest
+    container_name: postgres-db
+    restart: always
+    environment:
+      - POSTGRES_DB=personalappdb
+      - POSTGRES_USER_FILE=/run/secrets/db_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    secrets:
+      - db_user
+      - db_password
+    volumes:
+      - postgres-data:/home/needlide/postgres_app_db_data
+    ports:
+      - "5433:5432"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+
+secrets:
+  db_user:
+    file: ./secrets/db_user.txt
+  db_password:
+    file: ./secrets/db_password.txt
