@@ -12,7 +12,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         modelBuilder.Entity<Participant>().HasKey(p => new { p.UserId, p.EventId });
 
         modelBuilder.Entity<Participant>().HasOne(p => p.User).WithMany(u => u.Participations)

@@ -26,5 +26,4 @@ builder.Services.AddScoped<IUnitOfWork>();
 var app = builder.Build();
 
 
-
 await app.RunAsync();

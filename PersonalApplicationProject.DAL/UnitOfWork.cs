@@ -7,12 +7,12 @@ public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
 {
     public IUserRepository Users { get; } = new UserRepository(context);
     public IEventRepository Events { get; } = new EventRepository(context);
-        
+
     public void Dispose()
     {
         context.Dispose();
     }
-    
+
     public async Task<int> SaveChangesAsync()
     {
         return await context.SaveChangesAsync();

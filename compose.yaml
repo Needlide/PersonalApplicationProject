@@ -21,7 +21,7 @@
     secrets:
       - db_user
       - db_password
-      
+  
   db:
     image: postgres:latest
     container_name: postgres-db
