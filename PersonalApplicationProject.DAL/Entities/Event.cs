@@ -5,27 +5,21 @@ namespace PersonalApplicationProject.DAL.Entities;
 
 public class Event
 {
-    [Key]
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
 
-    [Required]
-    [MaxLength(255)]
-    public string Name { get; set; }
+    [Required] [MaxLength(255)] public string Name { get; set; }
 
-    [MaxLength(255)]
-    public string? Description { get; set; }
+    [MaxLength(255)] public string? Description { get; set; }
 
-    [Required]
-    public DateTime EventTimestamp { get; set; }
+    [Required] public DateTime EventTimestamp { get; set; }
 
     public string? Location { get; set; }
-    
+
     public int? Capacity { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
-    [NotMapped]
-    public int ParticipantCount => Participants.Count;
+
+    [NotMapped] public int ParticipantCount => Participants.Count;
 
 
     public int OrganizerId { get; set; }

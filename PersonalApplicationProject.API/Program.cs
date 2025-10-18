@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using PersonalApplicationProject.DAL;
+using PersonalApplicationProject.DAL.Interfaces;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -20,9 +21,9 @@ var connectionString = new NpgsqlConnectionStringBuilder
 }.ConnectionString;
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddScoped<IUnitOfWork>();
 
 var app = builder.Build();
-
 
 
 await app.RunAsync();
