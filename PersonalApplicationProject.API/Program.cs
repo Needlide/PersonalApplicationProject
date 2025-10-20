@@ -1,51 +1,128 @@
-using System.Text.Json;
+using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using PersonalApplicationProject.DAL;
 using PersonalApplicationProject.DAL.Interfaces;
 using PersonalApplicationProject.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using PersonalApplicationProject.Options;
+using PersonalApplicationProject.Options.Validations;
+using PersonalApplicationProject.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure JSON
 builder.Services.Configure<JsonOptions>(options =>
 {
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    options.SerializerOptions.PropertyNameCaseInsensitive = true;
-    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApiJsonSerializerContext.Default);
 });
 
-var dbHost = builder.Configuration["Database:Host"];
-var dbName = builder.Configuration["Database:Name"];
-var dbPort = builder.Configuration["Database:Port"];
-var dbUser = await File.ReadAllTextAsync("/run/secrets/db_user");
-var dbPassword = await File.ReadAllTextAsync("/run/secrets/db_password");
-
-var connectionString = new NpgsqlConnectionStringBuilder
+// Configure database connection (Docker)
+string connectionString;
+if (builder.Environment.IsDevelopment() && !Directory.Exists("/run/secrets"))
 {
-    Host = dbHost,
-    Port = int.Parse(dbPort ?? "5432"),
-    Database = dbName,
-    Username = dbUser,
-    Password = dbPassword
-}.ConnectionString;
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                       ?? throw new InvalidOperationException(
+                           "Connection string 'DefaultConnection' not found in appsettings.Development.json. Please ensure it is configured for local development.");
+}
+else
+{
+    var dbHost = builder.Configuration["Database:Host"];
+    var dbName = builder.Configuration["Database:Name"];
+    var dbPort = builder.Configuration["Database:Port"];
+    var dbUser = await File.ReadAllTextAsync("/run/secrets/db_user");
+    var dbPassword = await File.ReadAllTextAsync("/run/secrets/db_password");
+
+    connectionString = new NpgsqlConnectionStringBuilder
+    {
+        Host = dbHost,
+        Port = int.Parse(dbPort ?? "5432"),
+        Database = dbName,
+        Username = dbUser,
+        Password = dbPassword
+    }.ConnectionString;
+}
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddScoped<IUnitOfWork>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+// Bind JWT options from appsettings.json
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .ValidateOnStart();
+
+builder.Services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
+
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()!;
+
+// Configure Authentication
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtOptions.Key))
+        };
+    });
+
+// Configure Authorization
+var fallbackPolicy = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser()
+    .Build();
+
+builder.Services.AddAuthorizationBuilder().SetFallbackPolicy(fallbackPolicy);
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("https://needlide.github.io")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
+    });
+
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
+app.UseExceptionHandler(_ => { });
 app.UseHttpsRedirection();
+app.UseStatusCodePages();
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler(_ => {});
-}
+app.UseRouting();
+app.UseCors(app.Environment.IsDevelopment() ? "AllowAll" : "AllowFrontend");
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
