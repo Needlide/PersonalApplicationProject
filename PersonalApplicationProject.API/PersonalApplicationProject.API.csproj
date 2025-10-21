@@ -36,8 +36,4 @@
         <ProjectReference Include="..\PersonalApplicationProject.DAL\PersonalApplicationProject.DAL.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="Controllers\" />
-    </ItemGroup>
-
 </Project>

@@ -7,6 +7,7 @@ public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
 {
     public IUserRepository Users { get; } = new UserRepository(context);
     public IEventRepository Events { get; } = new EventRepository(context);
+    public IParticipantRepository Participants { get; } = new ParticipantRepository(context);
 
     public void Dispose()
     {

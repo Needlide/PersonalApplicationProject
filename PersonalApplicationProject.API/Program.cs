@@ -13,8 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 using PersonalApplicationProject.BLL.Interfaces;
 using PersonalApplicationProject.BLL.Options;
 using PersonalApplicationProject.BLL.Services;
-using PersonalApplicationProject.BLL.Validators;
 using PersonalApplicationProject.BLL.Validators.Event;
+using PersonalApplicationProject.Controllers;
 using PersonalApplicationProject.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +53,13 @@ else
 }
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+
+// Register controllers
+builder.Services.AddControllers();
+
+// Register Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Register global exception handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -136,5 +143,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 await app.RunAsync();

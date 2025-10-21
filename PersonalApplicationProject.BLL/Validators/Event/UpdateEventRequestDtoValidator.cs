@@ -7,12 +7,20 @@ public class UpdateEventRequestDtoValidator : AbstractValidator<UpdateEventReque
 {
     public UpdateEventRequestDtoValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().WithMessage("Event name is required")
-            .MaximumLength(255).WithMessage("Name must not exceed 255 characters");
-        RuleFor(x => x.Description).NotEmpty().WithMessage("Description is required")
-            .MaximumLength(255).WithMessage("Description must not exceed 255 characters");
-        RuleFor(x => x.EventTimestamp).NotEmpty().WithMessage("Event date and time are required.")
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Event name is required.")
+            .MaximumLength(255);
+        
+        RuleFor(x => x.Description)
+            .MaximumLength(255)
+            .When(x => x.Description != null);
+
+        RuleFor(x => x.EventTimestamp)
+            .NotEmpty()
             .GreaterThan(DateTime.UtcNow).WithMessage("Event must be in the future.");
-        RuleFor(x => x.Capacity).GreaterThan(0).WithMessage("Capacity must be a positive number.");
+        
+        RuleFor(x => x.Capacity)
+            .GreaterThan(0)
+            .When(x => x.Capacity.HasValue);
     }
 }
