@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +9,12 @@ using PersonalApplicationProject.DAL;
 using PersonalApplicationProject.DAL.Interfaces;
 using PersonalApplicationProject.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using PersonalApplicationProject.Options;
-using PersonalApplicationProject.Options.Validations;
+using PersonalApplicationProject.BLL.Interfaces;
+using PersonalApplicationProject.BLL.Options;
+using PersonalApplicationProject.BLL.Services;
+using PersonalApplicationProject.BLL.Validators;
+using PersonalApplicationProject.BLL.Validators.Event;
 using PersonalApplicationProject.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,19 +53,27 @@ else
 }
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Register global exception handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 // Bind JWT options from appsettings.json
-builder.Services.AddOptions<JwtOptions>()
-    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
-    .ValidateOnStart();
+var jwtOptions = new JwtOptions();
+builder.Configuration.GetSection(JwtOptions.SectionName).Bind(jwtOptions);
+builder.Services.AddSingleton(jwtOptions);
 
-builder.Services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
+// Register services from BLL
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAuthService>(serviceProvider =>
+{
+    var unitOfWork = serviceProvider.GetRequiredService<IUnitOfWork>();
+    return new AuthService(unitOfWork, jwtOptions);
+});
+builder.Services.AddScoped<IEventService, EventService>();
 
-var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()!;
+// Register FluentValidation
+builder.Services.AddValidatorsFromAssembly(typeof(CreateEventRequestDtoValidator).Assembly);
 
 // Configure Authentication
 builder.Services.AddAuthentication(options =>
