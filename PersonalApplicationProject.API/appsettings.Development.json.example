@@ -7,5 +7,10 @@
   },
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5433;Database=personalappdb;Username=USERNAME;Password=PASSWORD"
+  },
+  "Jwt": {
+    "Issuer": "https://yourapi.com",
+    "Audience": "https://yourapi.com",
+    "Key": "YOUR_SUPER_SECRET_RANDOM_STRING_OF_AT_LEAST_32_CHARS"
   }
 }

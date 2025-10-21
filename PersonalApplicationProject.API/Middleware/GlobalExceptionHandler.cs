@@ -1,12 +1,14 @@
 using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using PersonalApplicationProject.Serialization;
 
 namespace PersonalApplicationProject.Middleware;
 
 public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
+        CancellationToken cancellationToken)
     {
         logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
 
@@ -18,15 +20,13 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         };
 
         var environment = httpContext.RequestServices.GetService<IWebHostEnvironment>();
-        if (environment != null && environment.IsDevelopment())
-        {
-            problemDetails.Detail = exception.ToString();
-        }
-        
+        if (environment != null && environment.IsDevelopment()) problemDetails.Detail = exception.ToString();
+
         httpContext.Response.StatusCode = problemDetails.Status.Value;
-        
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
-        
+
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, ApiJsonSerializerContext.Default.ProblemDetails,
+            cancellationToken: cancellationToken);
+
         return true;
     }
 }
