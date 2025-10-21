@@ -15,7 +15,7 @@
             <HintPath>..\..\..\.nuget\packages\bcrypt.net-next\4.0.3\lib\net6.0\BCrypt.Net-Next.dll</HintPath>
         </Reference>
         <Reference Include="Microsoft.AspNetCore.JsonPatch">
-          <HintPath>..\..\..\.nuget\packages\microsoft.aspnetcore.jsonpatch\9.0.10\lib\net9.0\Microsoft.AspNetCore.JsonPatch.dll</HintPath>
+            <HintPath>..\..\..\.nuget\packages\microsoft.aspnetcore.jsonpatch\9.0.10\lib\net9.0\Microsoft.AspNetCore.JsonPatch.dll</HintPath>
         </Reference>
         <Reference Include="Microsoft.IdentityModel.Tokens">
             <HintPath>..\..\..\.nuget\packages\microsoft.identitymodel.tokens\8.0.1\lib\net9.0\Microsoft.IdentityModel.Tokens.dll</HintPath>

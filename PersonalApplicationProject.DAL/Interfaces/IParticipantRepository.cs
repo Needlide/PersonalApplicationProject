@@ -4,5 +4,4 @@ namespace PersonalApplicationProject.DAL.Interfaces;
 
 public interface IParticipantRepository : IRepository<Participant>
 {
-    
 }

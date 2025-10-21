@@ -17,23 +17,23 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-        <PackageReference Include="FluentValidation" Version="12.0.0" />
-        <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="9.0.10" />
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3"/>
+        <PackageReference Include="FluentValidation" Version="12.0.0"/>
+        <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10"/>
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="9.0.10"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.10" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.10"/>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PersonalApplicationProject.BLL\PersonalApplicationProject.BLL.csproj" />
-        <ProjectReference Include="..\PersonalApplicationProject.DAL\PersonalApplicationProject.DAL.csproj" />
+        <ProjectReference Include="..\PersonalApplicationProject.BLL\PersonalApplicationProject.BLL.csproj"/>
+        <ProjectReference Include="..\PersonalApplicationProject.DAL\PersonalApplicationProject.DAL.csproj"/>
     </ItemGroup>
 
 </Project>

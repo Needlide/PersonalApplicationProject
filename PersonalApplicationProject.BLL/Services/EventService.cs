@@ -8,7 +8,8 @@ using PersonalApplicationProject.DAL.Interfaces;
 
 namespace PersonalApplicationProject.BLL.Services;
 
-public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestDto> updateEventRequestDtoValidator) : IEventService
+public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestDto> updateEventRequestDtoValidator)
+    : IEventService
 {
     public async Task<Result<IEnumerable<EventSummaryDto>>> GetAllEventsAsync()
     {
@@ -71,19 +72,15 @@ public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestD
         return Result<EventDetailsDto>.Success(eventDetailsDto);
     }
 
-    public async Task<Result<bool>> PatchEventAsync(int eventId, JsonPatchDocument<UpdateEventRequestDto> patchDoc, int currentUserId)
+    public async Task<Result<bool>> PatchEventAsync(int eventId, JsonPatchDocument<UpdateEventRequestDto> patchDoc,
+        int currentUserId)
     {
         var eventEntity = await unitOfWork.Events.GetByIdAsync(eventId);
-        if (eventEntity is null)
-        {
-            return Result<bool>.Failure("Event not found.");
-        }
-    
+        if (eventEntity is null) return Result<bool>.Failure("Event not found.");
+
         // Authorization Check
         if (eventEntity.OrganizerId != currentUserId)
-        {
             return Result<bool>.Failure("Not authorized to update this event.");
-        }
 
         // Create a DTO to apply the patch to
         var eventToPatch = new UpdateEventRequestDto
@@ -96,26 +93,26 @@ public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestD
         };
 
         patchDoc.ApplyTo(eventToPatch);
-        
+
         var validationResult = await updateEventRequestDtoValidator.ValidateAsync(eventToPatch);
-        
+
         if (!validationResult.IsValid)
         {
             var errors = string.Join(" ", validationResult.Errors.Select(e => e.ErrorMessage));
             return Result<bool>.Failure(errors);
         }
-        
+
         eventEntity.Name = eventToPatch.Name;
         eventEntity.Description = eventToPatch.Description;
         eventEntity.EventTimestamp = eventToPatch.EventTimestamp;
         eventEntity.Location = eventToPatch.Location;
-        eventEntity.Capacity =  eventToPatch.Capacity;
+        eventEntity.Capacity = eventToPatch.Capacity;
 
         await unitOfWork.SaveChangesAsync();
-    
+
         return Result<bool>.Success(true);
     }
-    
+
     public async Task<Result<bool>> DeleteEventAsync(int eventId, int currentUserId)
     {
         var @event = await unitOfWork.Events.GetByIdAsync(eventId);
@@ -132,33 +129,23 @@ public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestD
     {
         var eventToJoin = await unitOfWork.Events.GetWithOrganizerAndParticipantsByIdAsync(eventId);
 
-        if (eventToJoin is null)
-        {
-            return Result<bool>.Failure("Event not found.");
-        }
-        
+        if (eventToJoin is null) return Result<bool>.Failure("Event not found.");
+
         if (eventToJoin.OrganizerId == participantId)
-        {
             return Result<bool>.Failure("As the organizer, you are already attending the event.");
-        }
-        
+
         var isAlreadyParticipant = eventToJoin.Participants.Any(p => p.UserId == participantId);
-        if (isAlreadyParticipant)
-        {
-            return Result<bool>.Failure("You are already registered for this event.");
-        }
-        
+        if (isAlreadyParticipant) return Result<bool>.Failure("You are already registered for this event.");
+
         if (eventToJoin.Capacity.HasValue && eventToJoin.ParticipantCount >= eventToJoin.Capacity.Value)
-        {
             return Result<bool>.Failure("This event is at full capacity.");
-        }
-        
+
         var newParticipation = new Participant
         {
             UserId = participantId,
             EventId = eventId
         };
-        
+
         await unitOfWork.Participants.AddAsync(newParticipation);
         await unitOfWork.SaveChangesAsync();
 
@@ -167,15 +154,12 @@ public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestD
 
     public async Task<Result<bool>> LeaveEventAsync(int eventId, int participantId)
     {
-        var participation = (await unitOfWork.Participants.FindAsync(
-            p => p.UserId == participantId && p.EventId == eventId
-        )).FirstOrDefault();
+        var participation =
+            (await unitOfWork.Participants.FindAsync(p => p.UserId == participantId && p.EventId == eventId
+            )).FirstOrDefault();
 
-        if (participation is null)
-        {
-            return Result<bool>.Failure("You are not registered for this event.");
-        }
-        
+        if (participation is null) return Result<bool>.Failure("You are not registered for this event.");
+
         unitOfWork.Participants.Delete(participation);
         await unitOfWork.SaveChangesAsync();
 

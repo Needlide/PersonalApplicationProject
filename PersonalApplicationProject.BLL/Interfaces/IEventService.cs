@@ -12,10 +12,11 @@ public interface IEventService
 
     Task<Result<EventDetailsDto>> CreateEventAsync(CreateEventRequestDto request, int organizerId);
 
-    Task<Result<bool>> PatchEventAsync(int eventId, JsonPatchDocument<UpdateEventRequestDto> patchDoc, int currentUserId);
+    Task<Result<bool>> PatchEventAsync(int eventId, JsonPatchDocument<UpdateEventRequestDto> patchDoc,
+        int currentUserId);
 
     Task<Result<bool>> DeleteEventAsync(int eventId, int currentUserId);
-    
+
     Task<Result<bool>> JoinEventAsync(int eventId, int participantId);
     Task<Result<bool>> LeaveEventAsync(int eventId, int participantId);
 }

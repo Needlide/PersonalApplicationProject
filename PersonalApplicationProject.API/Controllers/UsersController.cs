@@ -14,11 +14,11 @@ public class UsersController(IEventService eventService) : ControllerBase
     public async Task<IActionResult> GetUsersEvents()
     {
         var organizerId = User.GetUserId();
-        
+
         if (organizerId is null) return Unauthorized("Invalid user token.");
 
         var result = await eventService.GetAllEventsForUserAsync(organizerId.Value);
-        
+
         return Ok(result.Value);
     }
 }

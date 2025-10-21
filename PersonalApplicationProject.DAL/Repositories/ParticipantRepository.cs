@@ -5,5 +5,4 @@ namespace PersonalApplicationProject.DAL.Repositories;
 
 public class ParticipantRepository(AppDbContext context) : Repository<Participant>(context), IParticipantRepository
 {
-    
 }

@@ -12,8 +12,8 @@ namespace PersonalApplicationProject.Controllers;
 [Route("api/events")]
 public class EventsController(IEventService eventService) : ControllerBase
 {
-    private const string INVALID_USER_TOKEN = "Invalid user token";
-    
+    private const string InvalidUserToken = "Invalid user token";
+
     [HttpGet]
     public async Task<IActionResult> GetAllEvents()
     {
@@ -25,7 +25,7 @@ public class EventsController(IEventService eventService) : ControllerBase
     public async Task<IActionResult> GetEventById(int id)
     {
         var result = await eventService.GetEventDetailsAsync(id);
-        
+
         return result.Value is null ? NotFound() : Ok(result.Value);
     }
 
@@ -33,13 +33,13 @@ public class EventsController(IEventService eventService) : ControllerBase
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequestDto createEventRequestDto)
     {
         var organizerId = User.GetUserId();
-        
-        if (organizerId is null) return Unauthorized(INVALID_USER_TOKEN);
-        
+
+        if (organizerId is null) return Unauthorized(InvalidUserToken);
+
         var result = await eventService.CreateEventAsync(createEventRequestDto, organizerId.Value);
-        
+
         if (!result.IsSuccess) return BadRequest(result.Error);
-        
+
         return CreatedAtAction(nameof(GetEventById), new { id = result.Value!.Id }, result.Value);
     }
 
@@ -47,11 +47,11 @@ public class EventsController(IEventService eventService) : ControllerBase
     public async Task<IActionResult> PatchEvent(int id, [FromBody] JsonPatchDocument<UpdateEventRequestDto>? patchDoc)
     {
         var currentUserId = User.GetUserId();
-        
-        if (currentUserId is null) return Unauthorized(INVALID_USER_TOKEN);
-        
+
+        if (currentUserId is null) return Unauthorized(InvalidUserToken);
+
         if (patchDoc is null) return BadRequest("A patch document is required.");
-        
+
         var result = await eventService.PatchEventAsync(id, patchDoc, currentUserId.Value);
 
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
@@ -61,33 +61,33 @@ public class EventsController(IEventService eventService) : ControllerBase
     public async Task<IActionResult> DeleteEvent(int id)
     {
         var currentUserId = User.GetUserId();
-        
-        if (currentUserId is null) return Unauthorized(INVALID_USER_TOKEN);
+
+        if (currentUserId is null) return Unauthorized(InvalidUserToken);
 
         var result = await eventService.DeleteEventAsync(id, currentUserId.Value);
-        
+
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
-    
+
     [HttpPost("{id:int}/join")]
     public async Task<IActionResult> JoinEvent(int id)
     {
         var participantId = User.GetUserId();
-        
-        if (participantId is null) return Unauthorized(INVALID_USER_TOKEN);
+
+        if (participantId is null) return Unauthorized(InvalidUserToken);
 
         var result = await eventService.JoinEventAsync(id, participantId.Value);
 
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
-    
+
     [HttpDelete("{id:int}/leave")]
     public async Task<IActionResult> LeaveEvent(int id)
     {
         var participantId = User.GetUserId();
-        
-        if (participantId is null) return Unauthorized(INVALID_USER_TOKEN);
-        
+
+        if (participantId is null) return Unauthorized(InvalidUserToken);
+
         var result = await eventService.LeaveEventAsync(id, participantId.Value);
 
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
