@@ -4,7 +4,7 @@
     container_name: personalapplicationproject
     build:
       context: .
-      dockerfile: PersonalApplicationProject/Dockerfile
+      dockerfile: PersonalApplicationProject.API/Dockerfile
     restart: on-failure
     ports:
       - "8080:8080"
@@ -15,7 +15,8 @@
       - Database__Port=5432
       - Database__Name=personalappdb
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
     secrets:
@@ -36,9 +37,14 @@
     volumes:
       - postgres-data:/home/needlide/postgres_app_db_data
     ports:
-      - "5433:5432"
+      - "5432:5432"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d personalappdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   app-network:
