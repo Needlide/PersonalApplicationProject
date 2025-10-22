@@ -48,11 +48,18 @@ public class AuthService(IUnitOfWork unitOfWork, JwtOptions jwtOptions) : IAuthS
         if (!isPasswordValid) return Result<LoginResponseDto>.Failure("Invalid credentials");
 
         var (token, expiration) = GenerateJwt.GenerateJwtToken(user, jwtOptions);
+        var refreshToken = GenerateJwt.GenerateRefreshToken();
+        
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        
+        await unitOfWork.SaveChangesAsync();
 
         var response = new LoginResponseDto
         {
             Token = token,
             Expiration = expiration,
+            RefreshToken = refreshToken,
             User = new UserDto
             {
                 Id = user.Id,
@@ -63,5 +70,61 @@ public class AuthService(IUnitOfWork unitOfWork, JwtOptions jwtOptions) : IAuthS
         };
 
         return Result<LoginResponseDto>.Success(response);
+    }
+
+    public async Task<Result<LoginResponseDto>> RefreshTokenAsync(RefreshTokenRequestDto request)
+    {
+        var user = (await unitOfWork.Users.FindAsync(u => u.RefreshToken == request.RefreshToken)).FirstOrDefault();
+
+        if (user is null)
+        {
+            return Result<LoginResponseDto>.Failure("Invalid refresh token.");
+        }
+
+        if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        {
+            user.RefreshToken = null;
+            await unitOfWork.SaveChangesAsync();
+            return Result<LoginResponseDto>.Failure("Refresh token has expired. Please log in again.");
+        }
+
+        var (newJwtToken, newJwtExpiration) = GenerateJwt.GenerateJwtToken(user, jwtOptions);
+        
+        var newRefreshToken = GenerateJwt.GenerateRefreshToken();
+        user.RefreshToken = newRefreshToken;
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        await unitOfWork.SaveChangesAsync();
+        
+        var response = new LoginResponseDto
+        {
+            Token = newJwtToken,
+            Expiration = newJwtExpiration,
+            RefreshToken = newRefreshToken,
+            User = new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName
+            }
+        };
+
+        return Result<LoginResponseDto>.Success(response);
+    }
+
+    public async Task<Result<bool>> LogoutAsync(int userId)
+    {
+        var user = await unitOfWork.Users.GetByIdAsync(userId);
+
+        if (user is null)
+        {
+            return Result<bool>.Success(true);
+        }
+
+        user.RefreshToken = null;
+        user.RefreshTokenExpiryTime = null;
+        await unitOfWork.SaveChangesAsync();
+        
+        return Result<bool>.Success(true);
     }
 }

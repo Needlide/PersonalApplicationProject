@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using PersonalApplicationProject.BLL.Options;
@@ -34,5 +35,13 @@ public static class GenerateJwt
 
         var tokenHandler = new JwtSecurityTokenHandler();
         return (tokenHandler.WriteToken(token), expiration);
+    }
+    
+    public static string GenerateRefreshToken()
+    {
+        var randomNumber = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
     }
 }

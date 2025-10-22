@@ -10,6 +10,11 @@ public class User
     [Required] [MaxLength(255)] public string Email { get; set; } =  string.Empty;
 
     [Required] public string PasswordHash { get; set; } =  string.Empty;
+    
+    [MaxLength(256)]
+    public string? RefreshToken { get; set; }
+    
+    public DateTime? RefreshTokenExpiryTime { get; set; }
 
     [Required] [MaxLength(100)] public string FirstName { get; set; } = string.Empty;
 

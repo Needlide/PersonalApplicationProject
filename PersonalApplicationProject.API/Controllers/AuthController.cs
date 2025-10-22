@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PersonalApplicationProject.BLL.DTOs.User;
 using PersonalApplicationProject.BLL.Interfaces;
+using PersonalApplicationProject.Extensions;
 
 namespace PersonalApplicationProject.Controllers;
 
@@ -34,5 +35,34 @@ public class AuthController(IAuthService authService, IValidator<RegisterRequest
         var result = await authService.LoginAsync(loginRequestDto);
 
         return !result.IsSuccess ? Unauthorized(result.Error) : Ok(result.Value);
+    }
+    
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto request)
+    {
+        var result = await authService.RefreshTokenAsync(request);
+
+        if (!result.IsSuccess)
+        {
+            return Unauthorized(result.Error);
+        }
+        
+        return Ok(result.Value);
+    }
+    
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+        {
+            return BadRequest("Invalid user token.");
+        }
+    
+        await authService.LogoutAsync(userId.Value);
+    
+        return Ok(new { message = "Successfully logged out." });
     }
 }
