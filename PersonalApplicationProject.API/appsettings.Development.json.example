@@ -6,7 +6,7 @@
     }
   },
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5433;Database=personalappdb;Username=USERNAME;Password=PASSWORD"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=personalappdb;Username=USERNAME;Password=PASSWORD"
   },
   "Jwt": {
     "Issuer": "https://yourapi.com",

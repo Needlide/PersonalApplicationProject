@@ -10,11 +10,11 @@ using PersonalApplicationProject.DAL.Interfaces;
 using PersonalApplicationProject.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using PersonalApplicationProject.BLL.Interfaces;
 using PersonalApplicationProject.BLL.Options;
 using PersonalApplicationProject.BLL.Services;
-using PersonalApplicationProject.BLL.Validators.Event;
-using PersonalApplicationProject.Controllers;
+using PersonalApplicationProject.BLL.Validators.User;
 using PersonalApplicationProject.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,11 +55,36 @@ else
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
 // Register controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson();
 
 // Register Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header
+    });
+    
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // Register global exception handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -80,7 +105,7 @@ builder.Services.AddScoped<IAuthService>(serviceProvider =>
 builder.Services.AddScoped<IEventService, EventService>();
 
 // Register FluentValidation
-builder.Services.AddValidatorsFromAssembly(typeof(CreateEventRequestDtoValidator).Assembly);
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestDtoValidator>();
 
 // Configure Authentication
 builder.Services.AddAuthentication(options =>
@@ -139,15 +164,15 @@ app.UseStatusCodePages();
 app.UseRouting();
 app.UseCors(app.Environment.IsDevelopment() ? "AllowAll" : "AllowFrontend");
 
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "PersonalApplicationProject.API v1"));
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers().RequireAuthorization();
 
 await app.RunAsync();

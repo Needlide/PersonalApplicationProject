@@ -1,14 +1,15 @@
-using FluentValidation;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.JsonPatch.Operations;
 using PersonalApplicationProject.BLL.DTOs.Event;
 using PersonalApplicationProject.BLL.DTOs.User;
 using PersonalApplicationProject.BLL.Interfaces;
+using PersonalApplicationProject.BLL.Validators.Event;
 using PersonalApplicationProject.DAL.Entities;
 using PersonalApplicationProject.DAL.Interfaces;
 
 namespace PersonalApplicationProject.BLL.Services;
 
-public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestDto> updateEventRequestDtoValidator)
+public class EventService(IUnitOfWork unitOfWork)
     : IEventService
 {
     public async Task<Result<IEnumerable<EventSummaryDto>>> GetAllEventsAsync()
@@ -92,9 +93,15 @@ public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestD
             Capacity = eventEntity.Capacity
         };
 
+        if (patchDoc.Operations.Count(op => op.OperationType == OperationType.Copy)
+            > 10)
+        {
+            throw new InvalidOperationException();
+        }
+        
         patchDoc.ApplyTo(eventToPatch);
-
-        var validationResult = await updateEventRequestDtoValidator.ValidateAsync(eventToPatch);
+        
+        var validationResult = await PatchValidationHelper.ValidatePatchAsync(eventToPatch, patchDoc);
 
         if (!validationResult.IsValid)
         {
@@ -108,6 +115,7 @@ public class EventService(IUnitOfWork unitOfWork, IValidator<UpdateEventRequestD
         eventEntity.Location = eventToPatch.Location;
         eventEntity.Capacity = eventToPatch.Capacity;
 
+        unitOfWork.Events.Update(eventEntity);
         await unitOfWork.SaveChangesAsync();
 
         return Result<bool>.Success(true);

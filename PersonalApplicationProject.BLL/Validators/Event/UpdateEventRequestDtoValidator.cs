@@ -16,8 +16,9 @@ public class UpdateEventRequestDtoValidator : AbstractValidator<UpdateEventReque
             .When(x => x.Description != null);
 
         RuleFor(x => x.EventTimestamp)
-            .NotEmpty()
-            .GreaterThan(DateTime.UtcNow).WithMessage("Event must be in the future.");
+            .NotEmpty().WithMessage("Event date and time are required.")
+            .GreaterThan(DateTime.UtcNow.AddMinutes(-1))
+            .WithMessage("Event must be in the future.");
 
         RuleFor(x => x.Capacity)
             .GreaterThan(0)
