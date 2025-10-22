@@ -10,7 +10,9 @@ public class EventDetailsDto
     public DateTime EventTimestamp { get; set; }
     public string? Location { get; set; }
     public int? Capacity { get; set; }
+    public bool Visible { get; set; }
     public int ParticipantCount { get; set; }
 
     public UserDto Organizer { get; set; } = null!;
+    public IEnumerable<UserDto>? Participants { get; set; }
 }

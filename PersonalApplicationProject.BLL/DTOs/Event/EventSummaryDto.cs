@@ -7,4 +7,5 @@ public class EventSummaryDto
     public DateTime EventTimestamp { get; set; }
     public int ParticipantCount { get; set; }
     public int? Capacity { get; set; }
+    public bool Visible { get; set; }
 }

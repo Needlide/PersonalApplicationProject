@@ -19,7 +19,7 @@ public class EventService(IUnitOfWork unitOfWork)
         var eventSummaryDtos = events.Select(e => new EventSummaryDto
         {
             Id = e.Id, Name = e.Name, EventTimestamp = e.EventTimestamp, ParticipantCount = e.ParticipantCount,
-            Capacity = e.Capacity
+            Capacity = e.Capacity, Visible = e.Visible
         });
 
         return Result<IEnumerable<EventSummaryDto>>.Success(eventSummaryDtos);
@@ -43,7 +43,7 @@ public class EventService(IUnitOfWork unitOfWork)
         var eventSummaryDtos = usersEvents.Select(e => new EventSummaryDto
         {
             Id = e.Id, Name = e.Name, EventTimestamp = e.EventTimestamp, ParticipantCount = e.ParticipantCount,
-            Capacity = e.Capacity
+            Capacity = e.Capacity, Visible = e.Visible
         });
 
         return Result<IEnumerable<EventSummaryDto>>.Success(eventSummaryDtos);
@@ -58,7 +58,8 @@ public class EventService(IUnitOfWork unitOfWork)
             Description = request.Description,
             EventTimestamp = request.EventTimestamp,
             Location = request.Location,
-            Capacity = request.Capacity
+            Capacity = request.Capacity,
+            Visible = request.Visible
         };
 
         await unitOfWork.Events.AddAsync(newEvent);
@@ -78,19 +79,18 @@ public class EventService(IUnitOfWork unitOfWork)
     {
         var eventEntity = await unitOfWork.Events.GetByIdAsync(eventId);
         if (eventEntity is null) return Result<bool>.Failure("Event not found.");
-
-        // Authorization Check
+        
         if (eventEntity.OrganizerId != currentUserId)
             return Result<bool>.Failure("Not authorized to update this event.");
-
-        // Create a DTO to apply the patch to
+        
         var eventToPatch = new UpdateEventRequestDto
         {
             Name = eventEntity.Name,
             Description = eventEntity.Description,
             EventTimestamp = eventEntity.EventTimestamp,
             Location = eventEntity.Location,
-            Capacity = eventEntity.Capacity
+            Capacity = eventEntity.Capacity,
+            Visible = eventEntity.Visible
         };
 
         if (patchDoc.Operations.Count(op => op.OperationType == OperationType.Copy)
@@ -193,7 +193,9 @@ public class EventService(IUnitOfWork unitOfWork)
             Location = @event.Location,
             Capacity = @event.Capacity,
             ParticipantCount = @event.ParticipantCount,
-            Organizer = organizer
+            Organizer = organizer,
+            Participants = @event.Participants.Select(p => new UserDto { Id = p.UserId, Email = p.User.Email, FirstName = p.User.FirstName, LastName = p.User.LastName}).ToList(),
+            Visible = @event.Visible
         };
     }
 }

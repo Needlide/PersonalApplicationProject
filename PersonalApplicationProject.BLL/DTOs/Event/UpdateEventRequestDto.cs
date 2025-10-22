@@ -11,4 +11,6 @@ public class UpdateEventRequestDto
     public string? Location { get; set; }
 
     public int? Capacity { get; set; }
+    
+    public bool Visible { get; set; }
 }
