@@ -6,7 +6,7 @@ Contains the backend build with ASP.NET Core, .NET 9, using Entity Framework Cor
 # Prerequisites
 1. Docker and Docker Compose
 2. .NET SDK 9.0
-3. Angular v20
+3. Angular v19
 4. Node.js and npm
 
 # Getting Started
@@ -18,6 +18,11 @@ Enter the newly created directory and set up secrets files:
 in the root of the project create `secrets` directory, then create two files inside it:
 `secrets/db_user.txt` (contains desired database username)
 `secrets/db_password` (contains password for the database user)
+
+Clone client repository
+```
+git clone https://github.com/Needlide/PersonalApplicationProjectClient
+```
 
 Run with Docker Compose: `docker-compose up --build`
 
