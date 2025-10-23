@@ -23,6 +23,7 @@ Clone client repository
 ```
 git clone https://github.com/Needlide/PersonalApplicationProjectClient
 ```
+Ensure that `appsettings.json` contains `jwt` section from `appsettings.Development.json.example` 
 
 Run with Docker Compose: `docker-compose up --build`
 
