@@ -7,3 +7,5 @@ riderModule.iml
 appsettings.Development.json
 .idea/
 /PersonalApplicationProject.DAL/Migrations/
+node_modules/
+package-lock.json
