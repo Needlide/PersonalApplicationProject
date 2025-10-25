@@ -14,10 +14,19 @@ public class EventRepository(AppDbContext context) : Repository<Event>(context),
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public async Task<IEnumerable<Event>> GetAllWithParticipantsAsync()
+    public async Task<Event?> GetWithFullInfoByIdAsync(int id)
+    {
+        return await Context.Events
+            .Include(e => e.Organizer)
+            .Include(e => e.Participants)
+            .Include(e => e.Tags).FirstOrDefaultAsync(e => e.Id == id);
+    }
+
+    public async Task<IEnumerable<Event>> GetAllWithParticipantsAndTagsAsync()
     {
         return await Context.Events
             .Include(e => e.Participants)
+            .Include(e => e.Tags)
             .ToListAsync();
     }
 }
