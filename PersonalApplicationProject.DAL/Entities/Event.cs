@@ -29,4 +29,6 @@ public class Event
     public User Organizer { get; set; } = null!;
 
     public ICollection<Participant> Participants { get; set; } = new List<Participant>();
+    
+    public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }
