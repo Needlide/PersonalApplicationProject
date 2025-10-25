@@ -1,8 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace PersonalApplicationProject.DAL.Entities;
 
 public class Tag
 {
-    public string Name { get; set; }
+    [Key]
+    public int Id { get; set; }
+    [Required]
+    [MaxLength(50)]
+    public string Name { get; set; } = string.Empty;
 
-    private ICollection<Event> Events { get; } = new List<Event>();
+    public ICollection<Event> Events { get; } = new List<Event>();
 }

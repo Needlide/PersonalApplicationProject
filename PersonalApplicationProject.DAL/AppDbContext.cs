@@ -23,5 +23,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<User>().HasMany(u => u.OrganizedEvents).WithOne(e => e.Organizer)
             .HasForeignKey(e => e.OrganizerId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Event>().HasMany<Tag>().WithMany(t => t.Events).UsingEntity(j => j.ToTable("EventTag"));
     }
 }
