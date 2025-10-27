@@ -8,7 +8,12 @@ public class UserRepository(AppDbContext context) : Repository<User>(context), I
 {
     public async Task<IEnumerable<Event>> GetUsersEventsAsync(int userId)
     {
-        return await Context.Events.Where(e => e.OrganizerId == userId).Include(e => e.Tags).ToListAsync();
+        return await Context.Events
+            .Include(e => e.Organizer)
+            .Include(e => e.Participants)
+            .Where(e => e.OrganizerId == userId || e.Participants.Any(p => p.UserId == userId))
+            .Include(e => e.Tags)
+            .ToListAsync();
     }
 
     public async Task<User?> GetByEmailAsync(string email)
