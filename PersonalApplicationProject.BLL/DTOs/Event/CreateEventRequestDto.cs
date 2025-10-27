@@ -1,3 +1,5 @@
+using PersonalApplicationProject.BLL.DTOs.Tag;
+
 namespace PersonalApplicationProject.BLL.DTOs.Event;
 
 public class CreateEventRequestDto
@@ -13,4 +15,6 @@ public class CreateEventRequestDto
     public int? Capacity { get; set; }
     
     public bool Visible { get; set; }
+    
+    public ICollection<TagDto> Tags { get; set; } = new List<TagDto>();
 }

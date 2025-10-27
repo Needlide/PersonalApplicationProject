@@ -13,8 +13,7 @@ public class Event
 
     [Required] public DateTime EventTimestamp { get; set; }
 
-    [MaxLength(255)]
-    public string? Location { get; set; }
+    [MaxLength(255)] public string? Location { get; set; }
 
     public int? Capacity { get; set; }
     public bool Visible { get; set; } = true;
@@ -29,6 +28,6 @@ public class Event
     public User Organizer { get; set; } = null!;
 
     public ICollection<Participant> Participants { get; set; } = new List<Participant>();
-    
+
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }

@@ -1,3 +1,4 @@
+using PersonalApplicationProject.BLL.DTOs.Tag;
 using PersonalApplicationProject.BLL.DTOs.User;
 
 namespace PersonalApplicationProject.BLL.DTOs.Event;
@@ -15,4 +16,5 @@ public class EventDetailsDto
 
     public UserDto Organizer { get; set; } = null!;
     public IEnumerable<UserDto>? Participants { get; set; }
+    public IEnumerable<TagDto> Tags { get; set; } = new List<TagDto>();
 }
