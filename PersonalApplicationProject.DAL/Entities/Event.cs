@@ -29,5 +29,5 @@ public class Event
 
     public ICollection<Participant> Participants { get; set; } = new List<Participant>();
 
-    public ICollection<Tag> Tags { get; } = new List<Tag>();
+    public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }

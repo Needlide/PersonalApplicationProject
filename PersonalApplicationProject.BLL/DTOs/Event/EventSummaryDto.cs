@@ -1,3 +1,5 @@
+using PersonalApplicationProject.BLL.DTOs.Tag;
+
 namespace PersonalApplicationProject.BLL.DTOs.Event;
 
 public class EventSummaryDto
@@ -8,4 +10,5 @@ public class EventSummaryDto
     public int ParticipantCount { get; set; }
     public int? Capacity { get; set; }
     public bool Visible { get; set; }
+    public IEnumerable<TagDto>? Tags { get; set; }
 }

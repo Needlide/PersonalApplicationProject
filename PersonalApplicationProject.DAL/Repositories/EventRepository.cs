@@ -14,11 +14,9 @@ public class EventRepository(AppDbContext context) : Repository<Event>(context),
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public async Task<Event?> GetWithFullInfoByIdAsync(int id)
+    public async Task<Event?> GetWithTagsByIdAsync(int id)
     {
         return await Context.Events
-            .Include(e => e.Organizer)
-            .Include(e => e.Participants)
             .Include(e => e.Tags).FirstOrDefaultAsync(e => e.Id == id);
     }
 

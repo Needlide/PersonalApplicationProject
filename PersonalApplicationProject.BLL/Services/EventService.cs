@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.JsonPatch.Operations;
 using PersonalApplicationProject.BLL.DTOs.Event;
+using PersonalApplicationProject.BLL.DTOs.Tag;
 using PersonalApplicationProject.BLL.DTOs.User;
 using PersonalApplicationProject.BLL.Interfaces;
 using PersonalApplicationProject.BLL.Validators.Event;
@@ -14,12 +15,12 @@ public class EventService(IUnitOfWork unitOfWork)
 {
     public async Task<Result<IEnumerable<EventSummaryDto>>> GetAllEventsAsync()
     {
-        var events = await unitOfWork.Events.GetAllWithParticipantsAsync();
+        var events = await unitOfWork.Events.GetAllWithParticipantsAndTagsAsync();
 
         var eventSummaryDtos = events.Select(e => new EventSummaryDto
         {
             Id = e.Id, Name = e.Name, EventTimestamp = e.EventTimestamp, ParticipantCount = e.ParticipantCount,
-            Capacity = e.Capacity, Visible = e.Visible
+            Capacity = e.Capacity, Visible = e.Visible, Tags = e.Tags.Select(t => new TagDto { Name = t.Name })
         });
 
         return Result<IEnumerable<EventSummaryDto>>.Success(eventSummaryDtos);
@@ -43,7 +44,7 @@ public class EventService(IUnitOfWork unitOfWork)
         var eventSummaryDtos = usersEvents.Select(e => new EventSummaryDto
         {
             Id = e.Id, Name = e.Name, EventTimestamp = e.EventTimestamp, ParticipantCount = e.ParticipantCount,
-            Capacity = e.Capacity, Visible = e.Visible
+            Capacity = e.Capacity, Visible = e.Visible, Tags = e.Tags.Select(t => new TagDto { Name = t.Name })
         });
 
         return Result<IEnumerable<EventSummaryDto>>.Success(eventSummaryDtos);
@@ -59,7 +60,8 @@ public class EventService(IUnitOfWork unitOfWork)
             EventTimestamp = request.EventTimestamp,
             Location = request.Location,
             Capacity = request.Capacity,
-            Visible = request.Visible
+            Visible = request.Visible,
+            Tags = request.Tags.Select(t => new Tag { Name = t.Name.ToLowerInvariant() }).ToList()
         };
 
         await unitOfWork.Events.AddAsync(newEvent);
@@ -77,12 +79,12 @@ public class EventService(IUnitOfWork unitOfWork)
     public async Task<Result<bool>> PatchEventAsync(int eventId, JsonPatchDocument<UpdateEventRequestDto> patchDoc,
         int currentUserId)
     {
-        var eventEntity = await unitOfWork.Events.GetByIdAsync(eventId);
+        var eventEntity = await unitOfWork.Events.GetWithTagsByIdAsync(eventId);
         if (eventEntity is null) return Result<bool>.Failure("Event not found.");
-        
+
         if (eventEntity.OrganizerId != currentUserId)
             return Result<bool>.Failure("Not authorized to update this event.");
-        
+
         var eventToPatch = new UpdateEventRequestDto
         {
             Name = eventEntity.Name,
@@ -90,17 +92,16 @@ public class EventService(IUnitOfWork unitOfWork)
             EventTimestamp = eventEntity.EventTimestamp,
             Location = eventEntity.Location,
             Capacity = eventEntity.Capacity,
-            Visible = eventEntity.Visible
+            Visible = eventEntity.Visible,
+            Tags = eventEntity.Tags.Select(t => new TagDto { Name = t.Name }).ToList()
         };
 
         if (patchDoc.Operations.Count(op => op.OperationType == OperationType.Copy)
             > 10)
-        {
             throw new InvalidOperationException();
-        }
-        
+
         patchDoc.ApplyTo(eventToPatch);
-        
+
         var validationResult = await PatchValidationHelper.ValidatePatchAsync(eventToPatch, patchDoc);
 
         if (!validationResult.IsValid)
@@ -114,6 +115,12 @@ public class EventService(IUnitOfWork unitOfWork)
         eventEntity.EventTimestamp = eventToPatch.EventTimestamp;
         eventEntity.Location = eventToPatch.Location;
         eventEntity.Capacity = eventToPatch.Capacity;
+        eventEntity.Visible = eventToPatch.Visible;
+        
+        if (WasPathModified(patchDoc, "tags"))
+        {
+            await UpdateEventTagsAsync(eventEntity, eventToPatch.Tags);
+        }
 
         unitOfWork.Events.Update(eventEntity);
         await unitOfWork.SaveChangesAsync();
@@ -194,8 +201,44 @@ public class EventService(IUnitOfWork unitOfWork)
             Capacity = @event.Capacity,
             ParticipantCount = @event.ParticipantCount,
             Organizer = organizer,
-            Participants = @event.Participants.Select(p => new UserDto { Id = p.UserId, Email = p.User.Email, FirstName = p.User.FirstName, LastName = p.User.LastName}).ToList(),
-            Visible = @event.Visible
+            Participants = @event.Participants.Select(p => new UserDto
+                    { Id = p.UserId, Email = p.User.Email, FirstName = p.User.FirstName, LastName = p.User.LastName })
+                .ToList(),
+            Visible = @event.Visible,
+            Tags = @event.Tags.Select(t => new TagDto { Name = t.Name })
         };
+    }
+    
+    private static bool WasPathModified(JsonPatchDocument<UpdateEventRequestDto> patchDoc, string propertyName)
+    {
+        return patchDoc.Operations.Any(op => 
+            op.path.TrimStart('/').StartsWith(propertyName, StringComparison.OrdinalIgnoreCase));
+    }
+    
+    private async Task UpdateEventTagsAsync(Event eventEntity, ICollection<TagDto>? newTags)
+    {
+        var originalTagNames = eventEntity.Tags.Select(t => t.Name.ToLowerInvariant()).ToHashSet();
+        var newTagNames = newTags?.Select(t => t.Name.ToLowerInvariant()).ToHashSet() ?? [];
+
+        if (!originalTagNames.SetEquals(newTagNames))
+        {
+            eventEntity.Tags.Clear();
+
+            if (newTags == null || newTags.Count == 0) return;
+            
+            var tagNames = newTags.Select(t => t.Name).ToList();
+            
+            var existingTags = await unitOfWork.Tags.GetTagsByNamesAsync(tagNames);
+            var existingTagDict = existingTags.ToDictionary(t => t.Name.ToLowerInvariant());
+            
+            foreach (var tagName in tagNames)
+            {
+                var tag = existingTagDict.TryGetValue(tagName.ToLowerInvariant(), out var existingTag)
+                    ? existingTag
+                    : new Tag { Name = tagName };
+                
+                eventEntity.Tags.Add(tag);
+            }
+        }
     }
 }
