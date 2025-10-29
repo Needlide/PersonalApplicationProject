@@ -103,6 +103,7 @@ builder.Services.AddScoped<IAuthService>(serviceProvider =>
     return new AuthService(unitOfWork, jwtOptions);
 });
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<ITagService, TagService>();
 
 // Register FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestDtoValidator>();
