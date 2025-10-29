@@ -1,20 +1,20 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using PersonalApplicationProject.DAL;
-using PersonalApplicationProject.DAL.Interfaces;
-using PersonalApplicationProject.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using PersonalApplicationProject.BLL.Interfaces;
 using PersonalApplicationProject.BLL.Options;
 using PersonalApplicationProject.BLL.Services;
 using PersonalApplicationProject.BLL.Validators.User;
+using PersonalApplicationProject.DAL;
+using PersonalApplicationProject.DAL.Interfaces;
+using PersonalApplicationProject.Middleware;
 using PersonalApplicationProject.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -69,7 +69,7 @@ builder.Services.AddSwaggerGen(options =>
         BearerFormat = "JWT",
         In = ParameterLocation.Header
     });
-    
+
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {

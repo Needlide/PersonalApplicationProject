@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using PersonalApplicationProject.DAL.Entities;
 using PersonalApplicationProject.DAL.Interfaces;
@@ -11,6 +10,7 @@ public class TagRepository(AppDbContext context) : Repository<Tag>(context), ITa
     {
         var normalizedNames = names.Select(n => n.ToLowerInvariant()).ToList();
         return await Context.Tags
+            .AsNoTracking()
             .Where(t => normalizedNames.Contains(t.Name))
             .ToListAsync();
     }

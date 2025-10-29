@@ -28,7 +28,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Tag>()
             .HasIndex(t => t.Name)
             .IsUnique();
-        
+
         modelBuilder.Entity<Event>()
             .HasMany(e => e.Tags)
             .WithMany(t => t.Events)
@@ -43,7 +43,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                     j.HasIndex("TagId");
                     j.HasIndex("EventId");
                 });
-        
+
         modelBuilder.Entity<Tag>().HasData(
             new Tag { Id = 1, Name = "technology" },
             new Tag { Id = 2, Name = "sports" },

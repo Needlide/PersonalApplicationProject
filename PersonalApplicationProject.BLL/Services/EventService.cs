@@ -49,25 +49,39 @@ public class EventService(IUnitOfWork unitOfWork)
 
         return Result<IEnumerable<EventSummaryDto>>.Success(eventSummaryDtos);
     }
-    
+
+    public async Task<Result<IEnumerable<EventDetailsDto>>> GetAllEventsWhereUserIsParticipantAsync(int userId)
+    {
+        var usersEvents = await unitOfWork.Users.GetEventsWhereUserIsParticipantAsync(userId);
+        var events = usersEvents.Select(MapToEventDetailsDto);
+        return Result<IEnumerable<EventDetailsDto>>.Success(events);
+    }
+
+    public async Task<Result<IEnumerable<EventDetailsDto>>> GetAllEventsWhereUserIsOrganizerAsync(int userId)
+    {
+        var usersEvents = await unitOfWork.Users.GetOrganizedEventsByUserIdAsync(userId);
+        var events = usersEvents.Select(MapToEventDetailsDto);
+        return Result<IEnumerable<EventDetailsDto>>.Success(events);
+    }
+
     public async Task<Result<EventDetailsDto>> CreateEventAsync(CreateEventRequestDto request, int organizerId)
     {
         var tagNames = request.Tags
             .Select(t => t.Name.ToLowerInvariant())
             .Distinct()
             .ToList();
-        
+
         var existingTags = await unitOfWork.Tags.GetTagsByNamesAsync(tagNames);
 
         var existingTagsList = existingTags.ToList();
         var existingTagNames = existingTagsList.Select(t => t.Name).ToHashSet();
-        
+
         var newTagNames = tagNames.Where(name => !existingTagNames.Contains(name)).ToList();
-        
+
         var newTags = newTagNames.Select(name => new Tag { Name = name }).ToList();
-        
+
         var allTags = existingTagsList.Concat(newTags).ToList();
-    
+
         var newEvent = new Event
         {
             OrganizerId = organizerId,
@@ -85,7 +99,7 @@ public class EventService(IUnitOfWork unitOfWork)
 
         var createdEvent = await unitOfWork.Events.GetWithOrganizerAndParticipantsByIdAsync(newEvent.Id);
 
-        if (createdEvent is null) 
+        if (createdEvent is null)
             return Result<EventDetailsDto>.Failure("Failed to create event");
 
         var eventDetailsDto = MapToEventDetailsDto(createdEvent);
@@ -133,11 +147,8 @@ public class EventService(IUnitOfWork unitOfWork)
         eventEntity.Location = eventToPatch.Location;
         eventEntity.Capacity = eventToPatch.Capacity;
         eventEntity.Visible = eventToPatch.Visible;
-        
-        if (WasPathModified(patchDoc, "tags"))
-        {
-            await UpdateEventTagsAsync(eventEntity, eventToPatch.Tags);
-        }
+
+        if (WasPathModified(patchDoc, "tags")) await UpdateEventTagsAsync(eventEntity, eventToPatch.Tags);
 
         unitOfWork.Events.Update(eventEntity);
         await unitOfWork.SaveChangesAsync();
@@ -225,13 +236,13 @@ public class EventService(IUnitOfWork unitOfWork)
             Tags = @event.Tags.Select(t => new TagDto { Name = t.Name })
         };
     }
-    
+
     private static bool WasPathModified(JsonPatchDocument<UpdateEventRequestDto> patchDoc, string propertyName)
     {
-        return patchDoc.Operations.Any(op => 
+        return patchDoc.Operations.Any(op =>
             op.path.TrimStart('/').StartsWith(propertyName, StringComparison.OrdinalIgnoreCase));
     }
-    
+
     private async Task UpdateEventTagsAsync(Event eventEntity, ICollection<TagDto>? newTags)
     {
         var originalTagNames = eventEntity.Tags.Select(t => t.Name.ToLowerInvariant()).ToHashSet();
@@ -242,18 +253,18 @@ public class EventService(IUnitOfWork unitOfWork)
             eventEntity.Tags.Clear();
 
             if (newTags == null || newTags.Count == 0) return;
-            
+
             var tagNames = newTags.Select(t => t.Name).ToList();
-            
+
             var existingTags = await unitOfWork.Tags.GetTagsByNamesAsync(tagNames);
             var existingTagDict = existingTags.ToDictionary(t => t.Name.ToLowerInvariant());
-            
+
             foreach (var tagName in tagNames)
             {
                 var tag = existingTagDict.TryGetValue(tagName.ToLowerInvariant(), out var existingTag)
                     ? existingTag
                     : new Tag { Name = tagName };
-                
+
                 eventEntity.Tags.Add(tag);
             }
         }

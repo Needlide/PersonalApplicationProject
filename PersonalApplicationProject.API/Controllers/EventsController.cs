@@ -11,7 +11,9 @@ namespace PersonalApplicationProject.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/events")]
-public class EventsController(IEventService eventService, IValidator<CreateEventRequestDto> createEventRequestDtoValidator) : ControllerBase
+public class EventsController(
+    IEventService eventService,
+    IValidator<CreateEventRequestDto> createEventRequestDtoValidator) : ControllerBase
 {
     private const string InvalidUserToken = "Invalid user token";
 
@@ -34,9 +36,9 @@ public class EventsController(IEventService eventService, IValidator<CreateEvent
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequestDto createEventRequestDto)
     {
         var validationResult = await createEventRequestDtoValidator.ValidateAsync(createEventRequestDto);
-        
+
         if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
-        
+
         var organizerId = User.GetUserId();
 
         if (organizerId is null) return Unauthorized(InvalidUserToken);

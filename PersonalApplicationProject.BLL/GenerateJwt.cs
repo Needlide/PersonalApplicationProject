@@ -36,7 +36,7 @@ public static class GenerateJwt
         var tokenHandler = new JwtSecurityTokenHandler();
         return (tokenHandler.WriteToken(token), expiration);
     }
-    
+
     public static string GenerateRefreshToken()
     {
         var randomNumber = new byte[64];

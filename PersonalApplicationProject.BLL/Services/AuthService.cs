@@ -49,10 +49,10 @@ public class AuthService(IUnitOfWork unitOfWork, JwtOptions jwtOptions) : IAuthS
 
         var (token, expiration) = GenerateJwt.GenerateJwtToken(user, jwtOptions);
         var refreshToken = GenerateJwt.GenerateRefreshToken();
-        
+
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-        
+
         await unitOfWork.SaveChangesAsync();
 
         var response = new LoginResponseDto
@@ -76,10 +76,7 @@ public class AuthService(IUnitOfWork unitOfWork, JwtOptions jwtOptions) : IAuthS
     {
         var user = (await unitOfWork.Users.FindAsync(u => u.RefreshToken == request.RefreshToken)).FirstOrDefault();
 
-        if (user is null)
-        {
-            return Result<LoginResponseDto>.Failure("Invalid refresh token.");
-        }
+        if (user is null) return Result<LoginResponseDto>.Failure("Invalid refresh token.");
 
         if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
@@ -89,12 +86,12 @@ public class AuthService(IUnitOfWork unitOfWork, JwtOptions jwtOptions) : IAuthS
         }
 
         var (newJwtToken, newJwtExpiration) = GenerateJwt.GenerateJwtToken(user, jwtOptions);
-        
+
         var newRefreshToken = GenerateJwt.GenerateRefreshToken();
         user.RefreshToken = newRefreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
         await unitOfWork.SaveChangesAsync();
-        
+
         var response = new LoginResponseDto
         {
             Token = newJwtToken,
@@ -116,15 +113,12 @@ public class AuthService(IUnitOfWork unitOfWork, JwtOptions jwtOptions) : IAuthS
     {
         var user = await unitOfWork.Users.GetByIdAsync(userId);
 
-        if (user is null)
-        {
-            return Result<bool>.Success(true);
-        }
+        if (user is null) return Result<bool>.Success(true);
 
         user.RefreshToken = null;
         user.RefreshTokenExpiryTime = null;
         await unitOfWork.SaveChangesAsync();
-        
+
         return Result<bool>.Success(true);
     }
 }
