@@ -9,6 +9,8 @@ public interface IEventService
 
     Task<Result<EventDetailsDto?>> GetEventDetailsAsync(int id);
     Task<Result<IEnumerable<EventSummaryDto>>> GetAllEventsForUserAsync(int userId);
+    Task<Result<IEnumerable<EventDetailsDto>>> GetAllEventsWhereUserIsParticipantAsync(int userId);
+    Task<Result<IEnumerable<EventDetailsDto>>> GetAllEventsWhereUserIsOrganizerAsync(int userId);
 
     Task<Result<EventDetailsDto>> CreateEventAsync(CreateEventRequestDto request, int organizerId);
 

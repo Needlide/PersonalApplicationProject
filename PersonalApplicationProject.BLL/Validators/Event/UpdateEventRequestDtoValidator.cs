@@ -28,11 +28,11 @@ public class UpdateEventRequestDtoValidator : AbstractValidator<UpdateEventReque
             .Must(BeUniqueTags).WithMessage("Duplicate tags are not allowed.")
             .ForEach(tag => tag.SetValidator(new TagDtoValidator()));
     }
-    
+
     private static bool BeUniqueTags(ICollection<TagDto>? tags)
     {
         if (tags == null || tags.Count == 0) return true;
-        
+
         var tagNames = tags.Select(t => t.Name?.ToLowerInvariant()).ToList();
         return tagNames.Count == tagNames.Distinct().Count();
     }
