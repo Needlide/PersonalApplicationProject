@@ -1,10 +1,11 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using PersonalApplicationProject.DAL.Entities;
 using PersonalApplicationProject.DAL.Interfaces;
 
 namespace PersonalApplicationProject.DAL.Repositories;
 
-public class TagsRepository(AppDbContext context) : Repository<Tag>(context), ITagsRepository
+public class TagRepository(AppDbContext context) : Repository<Tag>(context), ITagRepository
 {
     public async Task<IEnumerable<Tag>> GetTagsByNamesAsync(IEnumerable<string> names)
     {
